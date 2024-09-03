@@ -1,3 +1,5 @@
+# ruff: noqa: E501
+
 tool_system = """
 You are a tool-calling LLM that will help with cybersecurity, you are working in SOC,
 you will utilize all tools you had to help the user when they asked so.
