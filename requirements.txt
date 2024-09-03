@@ -1,0 +1,19 @@
+# JSON Parsing for Langchain
+jq
+
+# VirusTotal API Interaction
+vt-py
+
+# LLMs Interaction & RAGs (Langchain)
+langchain
+langchain_chroma
+langchain_openai
+langchain_text_splitters
+langchain_community
+sentence-transformers
+
+# TIP API request
+requests
+
+# REST API Framework
+fastapi[standard]
