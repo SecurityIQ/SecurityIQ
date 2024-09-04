@@ -1,3 +1,5 @@
-# Code Linting & Type Checking
+# Code Linting, Formatting, and Type Checking
 ruff
+black
 mypy
+
