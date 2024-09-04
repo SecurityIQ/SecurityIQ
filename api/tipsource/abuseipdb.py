@@ -1,6 +1,6 @@
 import functools
 import os
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -20,12 +20,19 @@ class AbuseIPDB(TIPSource):
         response = requests.get(self.base_url.format(ip), headers=self.req_headers)
 
         if response.ok:
-            return response.json()
+            return cast(dict[str, Any], response.json())
 
         return {}
 
     # have no clue how to type kwargs in subclass like this
     def fetch_data(self, queries: list[str], **kwargs: Any) -> dict[str, Any]:
+        """Fetch reported IP addresses information from AbuseIPDB
+
+        Args:
+        ----
+            queries: A list of IP addresses to fetch information about
+
+        """
         full_info = {}
         for ip in queries:
             response = self._fetch_data_cache(ip)["data"]

@@ -13,8 +13,10 @@ def get_info_mitre(technique_ids: list[str], stix_type: STIXCategory) -> str:
 
     Args:
     ----
-        technique_id_list: A list of MITRE ATT&CK technique IDs to get information about
-        stix_type: The STIX type to get information about, must be one of attack-pattern, malware, tool, intrusion-set, campaign, course-of-action, x-mitre-matrix, x-mitre-tactic, x-mitre-data-source, x-mitre-data-component
+        technique_ids: A list of MITRE ATT&CK technique IDs to get information about
+        stix_type: The STIX type to get information about, must be one of
+        attack-pattern, malware, tool, intrusion-set, campaign, course-of-action,
+        x-mitre-matrix, x-mitre-tactic, x-mitre-data-source, x-mitre-data-component
 
     """
     mitre = MITRE()
