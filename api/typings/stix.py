@@ -1,3 +1,5 @@
+"""Containing type definitions related to STIX data."""
+
 from typing import Literal
 
 STIXCategory = Literal[

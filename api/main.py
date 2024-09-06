@@ -1,18 +1,22 @@
 import logging
-import typing
+from typing import Any
 
 from fastapi import FastAPI
 
-from api.rag import initialize_rag
+from api.typings.models.indicators import ThreatIndicatorsBody
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
-chroma, retreival_tool, splitter = initialize_rag()
-logger.info("RAG model initialized")
 
 
 @app.get("/")
-def root() -> dict[str, typing.Any]:
+def root() -> dict[str, Any]:
     return {"success": True, "message": "SecurityIQ is running"}
+
+
+@app.post("/api/v1/threat-analysis")
+def query_analysis(body: ThreatIndicatorsBody) -> dict[str, Any]:
+    logger.debug(body)
+    return {}
