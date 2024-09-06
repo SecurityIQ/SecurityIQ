@@ -1,4 +1,5 @@
 from collections.abc import Callable
+import logging
 
 from api.exceptions.indicator_exceptions import InvalidIndicatorTypeError
 from api.processors.baseclass import TIPSource
@@ -17,6 +18,7 @@ def processor(
             raise InvalidIndicatorTypeError
 
         processor_registry.register(indicator_types, cls)
+        logging.info(f"Registered {cls} for {indicator_types}")
 
         return cls
 

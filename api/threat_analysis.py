@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from api.registries.processor import processor_registry
@@ -11,6 +12,7 @@ class ThreatAnalysis:
         all_info: dict[str, dict[str, dict[str, Any]]] = {}
         for indicator in indicators:
             processors = processor_registry.get_processor(indicator.type)
+            logging.info(processors)
             for processor_cls in processors:
                 processor = processor_cls()
                 info = processor.fetch_data(indicator)
