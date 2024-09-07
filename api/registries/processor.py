@@ -1,5 +1,5 @@
 from api.exceptions.indicator_exceptions import InvalidIndicatorTypeError
-from api.processors.baseclass import TIPSource
+from api.processors.indicator.baseclass import TIPSource
 from api.typings.models.indicators import IndicatorType
 
 

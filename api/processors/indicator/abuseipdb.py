@@ -1,12 +1,15 @@
 import functools
+import logging
 import os
 from typing import Any, cast
 
 import requests
 
 from api.decorators.processor import processor
-from api.processors.baseclass import TIPSource
+from api.processors.indicator.baseclass import TIPSource
 from api.typings.models.indicators import Indicator, IndicatorType
+
+logger = logging.getLogger(__name__)
 
 
 @functools.cache
@@ -18,10 +21,9 @@ def _fetch_data_cache(ip: str) -> dict[str, Any]:
     base_url = "https://api.abuseipdb.com/api/v2/check?ipAddress={}"
     response = requests.get(base_url.format(ip), headers=req_headers, timeout=5)
 
-    if response.ok:
-        return cast(dict[str, Any], response.json())
+    logger.debug(response.text)
 
-    return {}
+    return cast(dict[str, Any], response.json())
 
 
 @processor(indicator_types=[IndicatorType.IP])
@@ -41,7 +43,14 @@ class AbuseIPDB(TIPSource):
         """
         ip = indicator.value
 
-        response = _fetch_data_cache(ip)["data"]
+        response = _fetch_data_cache(ip)
+
+        if response.get("errors"):
+            return response
+        if not response.get("data"):
+            return {}
+        response = response["data"]
+
         return {
             "abuseConfidenceScore": response["abuseConfidenceScore"],
             "countryCode": response["countryCode"],

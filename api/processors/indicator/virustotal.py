@@ -7,7 +7,7 @@ from typing import Any
 import vt as virustotal
 
 from api.decorators.processor import processor
-from api.processors.baseclass import TIPSource
+from api.processors.indicator.baseclass import TIPSource
 from api.typings.models.indicators import Indicator, IndicatorType
 
 
@@ -18,15 +18,22 @@ def _fetch_data_cache(
 ) -> virustotal.Object:
     info = None
     vt = virustotal.Client(os.environ["VIRUSTOTAL_API_KEY"])
-    match indicator_type:
-        case IndicatorType.IP:
-            info = vt.get_object(f"/ip_addresses/{indicator}")
-        case IndicatorType.DOMAIN:
-            info = vt.get_object(f"/domains/{indicator}")
-        case IndicatorType.URL:
-            info = vt.get_object(f"/urls/{indicator}")
-        case IndicatorType.HASH:
-            info = vt.get_object(f"/files/{indicator}")
+    try:
+        match indicator_type:
+            case IndicatorType.IP:
+                info = vt.get_object(f"/ip_addresses/{indicator}")
+            case IndicatorType.DOMAIN:
+                info = vt.get_object(f"/domains/{indicator}")
+            case IndicatorType.URL:
+                info = vt.get_object(f"/urls/{indicator}")
+            case IndicatorType.HASH:
+                info = vt.get_object(f"/files/{indicator}")
+    except virustotal.error.APIError as e:
+        vt.close()
+        if e.code == "NotFoundError":
+            return {
+                "error": "Indicator not found in VirusTotal, did you specify the right type?"
+            }  # noqa: E501
 
     vt.close()
     return info
@@ -61,6 +68,8 @@ class VirusTotal(TIPSource):
 
         if not info:
             return {}
+        if info.get("error"):
+            return info
 
         useful_keys = [
             "whois",
