@@ -2,7 +2,7 @@
 
 import functools
 import os
-from typing import Any
+from typing import Any, cast
 
 import vt as virustotal
 
@@ -32,8 +32,8 @@ def _fetch_data_cache(
         vt.close()
         if e.code == "NotFoundError":
             return {
-                "error": "Indicator not found in VirusTotal, did you specify the right type?"
-            }  # noqa: E501
+                "error": "Indicator not found in VirusTotal, did you specify the right type?",  # noqa: E501
+            }
 
     vt.close()
     return info
@@ -69,7 +69,7 @@ class VirusTotal(TIPSource):
         if not info:
             return {}
         if info.get("error"):
-            return info
+            return cast(dict[str, str], info)
 
         useful_keys = [
             "whois",

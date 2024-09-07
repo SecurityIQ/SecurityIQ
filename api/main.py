@@ -47,7 +47,7 @@ def setup_logging() -> None:
         log_path.chmod(0o740)
 
     config_file = "configs/logging.json"
-    with Path.open(config_file) as f:
+    with Path(config_file).open() as f:
         logging.config.dictConfig(json.load(f))
 
 
