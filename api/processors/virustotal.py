@@ -13,11 +13,11 @@ from api.typings.models.indicators import Indicator, IndicatorType
 
 @functools.cache
 def _fetch_data_cache(
-    vt: virustotal.Client,
     indicator: str,
     indicator_type: IndicatorType,
 ) -> virustotal.Object:
     info = None
+    vt = virustotal.Client(os.environ["VIRUSTOTAL_API_KEY"])
     match indicator_type:
         case IndicatorType.IP:
             info = vt.get_object(f"/ip_addresses/{indicator}")
@@ -28,6 +28,7 @@ def _fetch_data_cache(
         case IndicatorType.HASH:
             info = vt.get_object(f"/files/{indicator}")
 
+    vt.close()
     return info
 
 
@@ -44,7 +45,6 @@ class VirusTotal(TIPSource):
 
     def __init__(self) -> None:
         """Initialize the VirusTotal API client."""
-        self.vt = virustotal.Client(os.environ["VIRUSTOTAL_API_KEY"])
         self.processor_name = "VirusTotal"
 
     def fetch_data(self, indicator: Indicator) -> dict[str, Any]:
@@ -57,7 +57,7 @@ class VirusTotal(TIPSource):
             indicator value.
 
         """
-        info = _fetch_data_cache(self.vt, indicator.value, indicator.type)
+        info = _fetch_data_cache(indicator.value, indicator.type)
 
         if not info:
             return {}

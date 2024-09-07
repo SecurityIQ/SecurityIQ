@@ -1,5 +1,5 @@
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
 
 from api.exceptions.indicator_exceptions import InvalidIndicatorTypeError
 from api.processors.baseclass import TIPSource
@@ -7,6 +7,7 @@ from api.registries.processor import processor_registry
 from api.typings.models.indicators import IndicatorType
 
 logger = logging.getLogger(__name__)
+
 
 def processor(
     indicator_types: list[IndicatorType],

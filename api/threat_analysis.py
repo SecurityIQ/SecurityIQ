@@ -13,7 +13,7 @@ class ThreatAnalysis:
         all_info: dict[str, dict[str, dict[str, Any]]] = {}
         for indicator in indicators:
             processors = processor_registry.get_processor(indicator.type)
-            self.logger.debug(f"Processing {indicator.value} with {processors}")
+            self.logger.debug("Processing %s with %s", indicator.value, processors)
             all_info[indicator.value] = {}
             for processor_cls in processors:
                 processor = processor_cls()

@@ -2,8 +2,29 @@
     "version": 1,
     "disable_existing_loggers": false,
     "formatters": {
-        "simple": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%S%z",
+            "log_colors": {
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white"
+            }
+        },
+        "detailed_colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%S%z",
+            "log_colors": {
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white"
+            }
         },
         "detailed": {
             "format": "%(asctime)s - %(levelname)s - %(name)s - %(filename)s:%(lineno)d - %(message)s",
@@ -14,13 +35,13 @@
         "stderr": {
             "class": "logging.StreamHandler",
             "level": "WARNING",
-            "formatter": "detailed",
+            "formatter": "detailed_colored",
             "stream": "ext://sys.stderr"
         },
         "console": {
             "class": "logging.StreamHandler",
-            "level": "DEBUG",
-            "formatter": "detailed",
+            "level": "INFO",
+            "formatter": "colored",
             "stream": "ext://sys.stdout"
         },
         "file": {
@@ -34,7 +55,7 @@
         }
     },
     "loggers": {
-        "securityiq.api": {
+        "root": {
             "level": "DEBUG",
             "handlers": ["stderr", "file", "console"],
             "propagate": false

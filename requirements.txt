@@ -24,3 +24,5 @@ mitreattack-python
 python-dotenv
 
 requests
+
+colorlog
