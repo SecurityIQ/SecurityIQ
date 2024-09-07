@@ -6,6 +6,7 @@ from api.processors.baseclass import TIPSource
 from api.registries.processor import processor_registry
 from api.typings.models.indicators import IndicatorType
 
+logger = logging.getLogger(__name__)
 
 def processor(
     indicator_types: list[IndicatorType],
@@ -18,7 +19,7 @@ def processor(
             raise InvalidIndicatorTypeError
 
         processor_registry.register(indicator_types, cls)
-        logging.info(f"Registered {cls} for {indicator_types}")
+        logger.debug(f"Registered {cls} for {indicator_types}")
 
         return cls
 

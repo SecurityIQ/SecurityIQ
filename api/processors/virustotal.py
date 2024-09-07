@@ -20,7 +20,7 @@ def _fetch_data_cache(
     info = None
     match indicator_type:
         case IndicatorType.IP:
-            info = vt.get_object(f"/ip-addresses/{indicator}")
+            info = vt.get_object(f"/ip_addresses/{indicator}")
         case IndicatorType.DOMAIN:
             info = vt.get_object(f"/domains/{indicator}")
         case IndicatorType.URL:
