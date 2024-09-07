@@ -21,8 +21,6 @@ def _fetch_data_cache(ip: str) -> dict[str, Any]:
     base_url = "https://api.abuseipdb.com/api/v2/check?ipAddress={}"
     response = requests.get(base_url.format(ip), headers=req_headers, timeout=5)
 
-    logger.debug(response.text)
-
     return cast(dict[str, Any], response.json())
 
 
@@ -46,12 +44,13 @@ class AbuseIPDB(TIPSource):
         response = _fetch_data_cache(ip)
 
         if response.get("errors"):
+            logger.debug(response)
             return response
         if not response.get("data"):
             return {}
         response = response["data"]
 
-        return {
+        full_info = {
             "abuseConfidenceScore": response["abuseConfidenceScore"],
             "countryCode": response["countryCode"],
             "isp": response["isp"],
@@ -59,3 +58,5 @@ class AbuseIPDB(TIPSource):
             "isTor": response["isTor"],
             "totalReports": response["totalReports"],
         }
+
+        return full_info

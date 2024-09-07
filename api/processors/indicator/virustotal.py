@@ -1,6 +1,7 @@
 """VirusTotal API integration for TIP."""
 
 import functools
+import logging
 import os
 from typing import Any, cast
 
@@ -10,6 +11,7 @@ from api.decorators.processor import processor
 from api.processors.indicator.baseclass import TIPSource
 from api.typings.models.indicators import Indicator, IndicatorType
 
+logger = logging.getLogger(__name__)
 
 @functools.cache
 def _fetch_data_cache(
@@ -30,6 +32,7 @@ def _fetch_data_cache(
                 info = vt.get_object(f"/files/{indicator}")
     except virustotal.error.APIError as e:
         vt.close()
+        logger.debug(e)
         if e.code == "NotFoundError":
             return {
                 "error": "Indicator not found in VirusTotal, did you specify the right type?",  # noqa: E501
