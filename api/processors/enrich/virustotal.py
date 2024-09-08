@@ -8,10 +8,11 @@ from typing import Any, cast
 import vt as virustotal
 
 from api.decorators.processor import processor
-from api.processors.indicator.baseclass import TIPSource
+from api.processors.enrich.baseclass import TIPSource
 from api.typings.models.indicators import Indicator, IndicatorType
 
 logger = logging.getLogger(__name__)
+
 
 @functools.cache
 def _fetch_data_cache(
@@ -93,10 +94,7 @@ class VirusTotal(TIPSource):
 
         engine_names = list(info.get("last_analysis_results").keys())
 
-        # get the first 10 engines instead of all of them to reduce context.
-        engine_names_to_process = engine_names[:10]
-
-        for engine_name in engine_names_to_process:
+        for engine_name in engine_names:
             engine_info = info.get("last_analysis_results").get(engine_name)
             full_info[f"engine_{engine_name}_method"] = engine_info["method"]
             full_info[f"engine_{engine_name}_category"] = engine_info["category"]

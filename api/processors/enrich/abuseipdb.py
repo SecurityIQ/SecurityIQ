@@ -6,7 +6,7 @@ from typing import Any, cast
 import requests
 
 from api.decorators.processor import processor
-from api.processors.indicator.baseclass import TIPSource
+from api.processors.enrich.baseclass import TIPSource
 from api.typings.models.indicators import Indicator, IndicatorType
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class AbuseIPDB(TIPSource):
             return {}
         response = response["data"]
 
-        full_info = {
+        return {
             "abuseConfidenceScore": response["abuseConfidenceScore"],
             "countryCode": response["countryCode"],
             "isp": response["isp"],
@@ -58,5 +58,3 @@ class AbuseIPDB(TIPSource):
             "isTor": response["isTor"],
             "totalReports": response["totalReports"],
         }
-
-        return full_info

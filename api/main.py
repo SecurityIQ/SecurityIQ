@@ -52,15 +52,26 @@ def setup_logging() -> None:
 
 
 def load_processors() -> None:
-    processor_dir = "processors/indicator"
+    processor_dir = "processors"
     logger = get_logger()
-    for filename in os.listdir(processor_dir):
-        if filename.endswith(".py") and filename not in ("__init__.py", "baseclass.py"):
-            module_name = filename[:-3]
-            importlib.import_module(
-                f"api.{'.'.join(processor_dir.split('/'))}.{module_name}",
-            )
-            logger.info("Loaded module %s", module_name)
+    for root, _, files in os.walk(processor_dir):
+        for filename in files:
+            if filename.endswith(".py") and filename not in (
+                "__init__.py",
+                "baseclass.py",
+            ):
+                module_name = filename[:-3]
+                # Generate the import path dynamically
+                relative_path = Path(root).relative_to(processor_dir)
+
+                if relative_path.parts:
+                    module_import_path = f"api.{'.'.join(['processors',
+                                                          *relative_path.parts])}.{module_name}"
+                else:
+                    module_import_path = f"api.processors.{module_name}"
+
+                importlib.import_module(module_import_path)
+                logger.info("Loaded module %s", module_name)
 
 
 @asynccontextmanager
