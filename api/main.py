@@ -102,14 +102,7 @@ def root() -> dict[str, Any]:
 def query_analysis(body: ThreatIndicatorsBody) -> dict[str, Any]:
     logger = get_logger()
     threat_analysis = get_threat_analysis()
-    if logger is None:
-        logging.error("Logger is not initialized")
-        return {"success": False, "message": "Logger is not initialized"}
 
     logger.debug("Received request: %s", body)
     # temporary returning everything, will add pre-processing and scoring system later
-    if threat_analysis is None:
-        logger.error("ThreatAnalysis is not initialized")
-        return {"success": False, "message": "ThreatAnalysis is not initialized"}
-
     return threat_analysis.analyse_threat(body.indicators)
