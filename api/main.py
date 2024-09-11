@@ -2,7 +2,6 @@ import importlib
 import json
 import logging
 import logging.config
-import jwt
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -10,15 +9,17 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import dotenv
-from fastapi import FastAPI, Request, Response, status
+import jwt
+from fastapi import FastAPI, Response, status
 from fastapi.params import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from api.exceptions.init_exceptions import ClassUninitializedError
 from api.threat_analysis import ThreatAnalysis
 from api.typings.models.indicators import ThreatIndicatorsBody
 
 dotenv.load_dotenv()
+
 
 class AppState:
     def __init__(self) -> None:
@@ -95,16 +96,25 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(lifespan=lifespan)
 security = HTTPBearer()
 
+
 @app.get("/")
 def root() -> dict[str, Any]:
     return {"success": True, "message": "SecurityIQ is running"}
 
 
 @app.post("/api/v1/threat-analysis")
-def query_analysis(body: ThreatIndicatorsBody, credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)], response: Response) -> dict[str, Any]:
+def query_analysis(
+    body: ThreatIndicatorsBody,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    response: Response,
+) -> dict[str, Any]:
     logger = get_logger()
     try:
-        jwt.decode(credentials.credentials, os.environ["CLERK_JWT_PUBKEY"], algorithms=["RS256"])
+        jwt.decode(
+            credentials.credentials,
+            os.environ["CLERK_JWT_PUBKEY"],
+            algorithms=["RS256"],
+        )
     except jwt.exceptions.PyJWTError as e:
         logger.debug("Authentication Failed: %s", e)
         response.status_code = status.HTTP_401_UNAUTHORIZED
