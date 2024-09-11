@@ -105,7 +105,8 @@ def query_analysis(body: ThreatIndicatorsBody, credentials: Annotated[HTTPAuthor
     logger = get_logger()
     try:
         jwt.decode(credentials.credentials, os.environ["CLERK_JWT_PUBKEY"], algorithms=["RS256"])
-    except jwt.exceptions.PyJWTError:
+    except jwt.exceptions.PyJWTError as e:
+        logger.debug("Authentication Failed: %s", e)
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"success": False, "message": "Invalid Token"}
 
