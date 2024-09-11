@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import dotenv
+from fastapi.responses import JSONResponse
 import jwt
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.params import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -76,6 +77,17 @@ def load_processors() -> None:
                 importlib.import_module(module_import_path)
                 logger.info("Loaded module %s", module_name)
 
+def verify_jwt(token: str) -> bool:
+    try:
+        jwt.decode(
+            token,
+            os.environ["CLERK_JWT_PUBKEY"],
+            algorithms=["RS256"],
+        )
+        return True
+    except jwt.exceptions.PyJWTError:
+        return False
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
@@ -92,10 +104,23 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     app_state.threat_analysis = None
     app_state.logger = None
 
+PROTECTED_ROUTES = ["/api/v1/threat-analysis"]
+
 
 app = FastAPI(lifespan=lifespan)
 security = HTTPBearer()
 
+async def auth_middleware(request: Request, call_next):
+    if request.url.path in PROTECTED_ROUTES:
+        token = await security(request)
+        if not token:
+            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"success": False, "detail": "Missing Token"})
+        if not verify_jwt(token.credentials):
+            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"success": False, "detail": "Invalid Token"})
+    response = await call_next(request)
+    return response
+
+app.middleware("http")(auth_middleware)
 
 @app.get("/")
 def root() -> dict[str, Any]:
@@ -105,21 +130,8 @@ def root() -> dict[str, Any]:
 @app.post("/api/v1/threat-analysis")
 def query_analysis(
     body: ThreatIndicatorsBody,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    response: Response,
 ) -> dict[str, Any]:
     logger = get_logger()
-    try:
-        jwt.decode(
-            credentials.credentials,
-            os.environ["CLERK_JWT_PUBKEY"],
-            algorithms=["RS256"],
-        )
-    except jwt.exceptions.PyJWTError as e:
-        logger.debug("Authentication Failed: %s", e)
-        response.status_code = status.HTTP_401_UNAUTHORIZED
-        return {"success": False, "message": "Invalid Token"}
-
     threat_analysis = get_threat_analysis()
 
     logger.debug("Received request: %s", body)
