@@ -2,21 +2,23 @@ import importlib
 import json
 import logging
 import logging.config
+import jwt
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response, status
+from fastapi.params import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from api.exceptions.init_exceptions import ClassUninitializedError
 from api.threat_analysis import ThreatAnalysis
 from api.typings.models.indicators import ThreatIndicatorsBody
 
 dotenv.load_dotenv()
-
 
 class AppState:
     def __init__(self) -> None:
@@ -91,7 +93,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(lifespan=lifespan)
-
+security = HTTPBearer()
 
 @app.get("/")
 def root() -> dict[str, Any]:
@@ -99,8 +101,14 @@ def root() -> dict[str, Any]:
 
 
 @app.post("/api/v1/threat-analysis")
-def query_analysis(body: ThreatIndicatorsBody) -> dict[str, Any]:
+def query_analysis(body: ThreatIndicatorsBody, credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)], response: Response) -> dict[str, Any]:
     logger = get_logger()
+    try:
+        jwt.decode(credentials.credentials, os.environ["CLERK_JWT_PUBKEY"], algorithms=["RS256"])
+    except jwt.exceptions.PyJWTError:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {"success": False, "message": "Invalid Token"}
+
     threat_analysis = get_threat_analysis()
 
     logger.debug("Received request: %s", body)
