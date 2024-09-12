@@ -3,17 +3,16 @@ import json
 import logging
 import logging.config
 import os
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Any
 
 import dotenv
-from fastapi.responses import JSONResponse
 import jwt
-from fastapi import FastAPI, HTTPException, Request, Response, status
-from fastapi.params import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import FastAPI, Request, Response, status
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer
 
 from api.exceptions.init_exceptions import ClassUninitializedError
 from api.threat_analysis import ThreatAnalysis
@@ -77,16 +76,19 @@ def load_processors() -> None:
                 importlib.import_module(module_import_path)
                 logger.info("Loaded module %s", module_name)
 
-def verify_jwt(token: str) -> bool:
+
+def verify_jwt(token: str, client_host: str) -> bool:
     try:
         jwt.decode(
             token,
             os.environ["CLERK_JWT_PUBKEY"],
             algorithms=["RS256"],
         )
-        return True
-    except jwt.exceptions.PyJWTError:
+    except jwt.exceptions.PyJWTError as e:
+        get_logger().warning("%s > Authentication Failed: %s", client_host, e)
         return False
+    else:
+        return True
 
 
 @asynccontextmanager
@@ -104,23 +106,36 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     app_state.threat_analysis = None
     app_state.logger = None
 
+
 PROTECTED_ROUTES = ["/api/v1/threat-analysis"]
 
 
 app = FastAPI(lifespan=lifespan)
 security = HTTPBearer()
 
-async def auth_middleware(request: Request, call_next):
+
+async def auth_middleware(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
     if request.url.path in PROTECTED_ROUTES:
         token = await security(request)
         if not token:
-            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"success": False, "detail": "Missing Token"})
-        if not verify_jwt(token.credentials):
-            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"success": False, "detail": "Invalid Token"})
-    response = await call_next(request)
-    return response
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"success": False, "detail": "Missing Token"},
+            )
+        client_host = request.client.host if request.client else "unknown_host"
+        if not verify_jwt(token.credentials, client_host):
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"success": False, "detail": "Invalid Token"},
+            )
+    return await call_next(request)
+
 
 app.middleware("http")(auth_middleware)
+
 
 @app.get("/")
 def root() -> dict[str, Any]:
